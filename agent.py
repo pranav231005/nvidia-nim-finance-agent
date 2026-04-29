@@ -101,49 +101,137 @@ def analyze_with_gemini(all_data):
                 raise e
 
 class PDFReport(FPDF):
+    # Dark navy color for header bar
+    HEADER_R, HEADER_G, HEADER_B = 15, 23, 42
+    # Accent orange for section icons
+    ACCENT_R, ACCENT_G, ACCENT_B = 234, 88, 12
+    # Section title dark
+    TITLE_R, TITLE_G, TITLE_B = 15, 23, 42
+    # Body text color
+    BODY_R, BODY_G, BODY_B = 30, 30, 30
+
     def header(self):
-        self.set_font('helvetica', 'B', 15)
-        self.cell(0, 10, 'Daily Financial Analysis Report', new_x="LMARGIN", new_y="NEXT", align='C')
-        self.set_font('helvetica', 'I', 10)
-        self.cell(0, 10, f'Generated on: {datetime.datetime.now().strftime("%Y-%m-%d")}', new_x="LMARGIN", new_y="NEXT", align='C')
-        self.ln(10)
+        # Full-width dark navy header bar
+        self.set_fill_color(self.HEADER_R, self.HEADER_G, self.HEADER_B)
+        self.rect(0, 0, 210, 30, 'F')
+        # Report title in white
+        self.set_y(8)
+        self.set_font('helvetica', 'B', 16)
+        self.set_text_color(255, 255, 255)
+        self.cell(0, 8, 'Daily Financial Analysis Report', align='C', new_x="LMARGIN", new_y="NEXT")
+        # Subtitle date in light gray
+        self.set_font('helvetica', '', 9)
+        self.set_text_color(180, 200, 220)
+        self.cell(0, 6, f'Generated on {datetime.datetime.now().strftime("%A, %B %d, %Y")}   |   Indian Market Intelligence', align='C', new_x="LMARGIN", new_y="NEXT")
+        # Reset text color and add spacing
+        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
+        self.ln(8)
 
     def footer(self):
-        self.set_y(-15)
+        # Thin accent line above footer
+        self.set_y(-18)
+        self.set_draw_color(self.ACCENT_R, self.ACCENT_G, self.ACCENT_B)
+        self.set_line_width(0.5)
+        self.line(10, self.get_y(), 200, self.get_y())
+        self.ln(1)
         self.set_font('helvetica', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', align='C')
+        self.set_text_color(120, 120, 120)
+        self.cell(0, 8, f'Page {self.page_no()}  |  AI-Powered Financial Intelligence  |  Confidential', align='C')
+
+    def section_header(self, title):
+        """Print a styled section header with an orange left accent bar."""
+        self.ln(4)
+        # Orange accent bar on left
+        self.set_fill_color(self.ACCENT_R, self.ACCENT_G, self.ACCENT_B)
+        self.rect(self.l_margin - 1, self.get_y(), 3, 8, 'F')
+        # Section title text
+        self.set_font('helvetica', 'B', 13)
+        self.set_text_color(self.TITLE_R, self.TITLE_G, self.TITLE_B)
+        self.set_x(self.l_margin + 5)
+        self.cell(0, 8, title, new_x="LMARGIN", new_y="NEXT")
+        # Thin underline
+        self.set_draw_color(220, 220, 230)
+        self.set_line_width(0.3)
+        self.line(self.l_margin, self.get_y(), 200, self.get_y())
+        self.ln(3)
+        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
+
+    def bullet_line(self, text):
+        """Print a bullet point with proper indentation."""
+        import textwrap
+        self.set_font('helvetica', '', 10)
+        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
+        # Orange bullet dot
+        self.set_fill_color(self.ACCENT_R, self.ACCENT_G, self.ACCENT_B)
+        self.circle(self.l_margin + 1, self.get_y() + 3.5, 1, 'F')
+        # Indented text
+        wrapped = textwrap.wrap(text, width=90, break_long_words=True)
+        for i, w_line in enumerate(wrapped):
+            self.set_x(self.l_margin + 5)
+            self.cell(0, 5.5, w_line, new_x="LMARGIN", new_y="NEXT")
+        self.ln(1)
+
+    def body_line(self, text):
+        """Print a regular body line with proper wrapping."""
+        import textwrap
+        self.set_font('helvetica', '', 10)
+        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
+        wrapped = textwrap.wrap(text, width=95, break_long_words=True)
+        for w_line in wrapped:
+            self.cell(0, 5.5, w_line, new_x="LMARGIN", new_y="NEXT")
+
 
 def create_pdf(markdown_text, filename="Financial_Report.pdf"):
     print("Generating PDF...")
     pdf = PDFReport()
+    pdf.set_auto_page_break(auto=True, margin=20)
+    pdf.set_margins(left=15, top=35, right=15)
     pdf.add_page()
-    pdf.set_font("helvetica", size=11)
-    
-    import textwrap
-    
-    # Very basic markdown to text conversion for FPDF (which doesn't natively support markdown)
+
     for line in markdown_text.split('\n'):
-        # Clean up markdown formatting and trailing spaces/carriage returns
-        clean_line = line.replace('**', '').replace('##', '').replace('*', '').strip()
-        
-        # Handle encoding issues by converting unknown characters to '?'
-        clean_line = clean_line.encode('latin-1', 'replace').decode('latin-1')
-        
-        # Use Python's textwrap to split the text into an array of safe, short lines
-        wrapped_lines = textwrap.wrap(clean_line, width=85, break_long_words=True)
-        
-        # If the line was empty (e.g. paragraph break), just add an empty space
-        if not wrapped_lines:
-            pdf.ln(8)
+        raw = line.strip()
+        if not raw:
+            pdf.ln(3)
             continue
-            
-        # Print each wrapped line manually using standard cell() to bypass the buggy multi_cell() function
-        for w_line in wrapped_lines:
-            pdf.cell(0, 8, w_line, new_x="LMARGIN", new_y="NEXT")
-        
+
+        # Encode safely
+        raw = raw.encode('latin-1', 'replace').decode('latin-1')
+
+        # H1/H2 section headers: ## Title or # Title
+        if raw.startswith('## ') or raw.startswith('# '):
+            title = raw.lstrip('#').strip()
+            pdf.section_header(title)
+
+        # Bullet points: - item or * item
+        elif raw.startswith('- ') or raw.startswith('* '):
+            text = raw[2:].replace('**', '').replace('*', '').strip()
+            pdf.bullet_line(text)
+
+        # Bold-only line (markdown heading substitute like **Company Name**)
+        elif raw.startswith('**') and raw.endswith('**'):
+            title = raw.replace('**', '').strip()
+            pdf.set_font('helvetica', 'B', 11)
+            pdf.set_text_color(15, 23, 42)
+            pdf.cell(0, 7, title, new_x="LMARGIN", new_y="NEXT")
+            pdf.ln(1)
+
+        # Separator lines (----)
+        elif raw.startswith('---'):
+            pdf.set_draw_color(220, 220, 230)
+            pdf.set_line_width(0.3)
+            pdf.line(pdf.l_margin, pdf.get_y(), 195, pdf.get_y())
+            pdf.ln(4)
+
+        # Regular body text
+        else:
+            clean = raw.replace('**', '').replace('*', '').strip()
+            if clean:
+                pdf.body_line(clean)
+
     pdf.output(filename)
     print(f"PDF saved as {filename}")
     return filename
+
 
 def send_email(filename):
     if not all([EMAIL_SENDER, EMAIL_PASSWORD, EMAIL_RECEIVER]):
