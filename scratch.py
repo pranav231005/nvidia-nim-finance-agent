@@ -1,21 +1,15 @@
-import requests
+import yfinance as yf
 
-with open("test.pdf", "wb") as f:
-    f.write(b"%PDF-1.4 dummy")
+symbols = [
+    "IRFC.NS", "GOODLUCK.NS", "BSE.NS", "LICI.NS", "ASTERDM.NS", "NTPC.NS", 
+    "VEDL.NS", "TRUALT.NS", "ETERNAL.NS", "TMPV.NS", "EXIDEIND.NS", "NHPC.NS", 
+    "BAJAJHFL.NS", "TRENT.NS", "TATAMOTORS.NS", "HDFCBANK.NS", "RELIANCE.NS", 
+    "M&M.NS", "SBIN.NS", "TCS.NS", "BHARTIARTL.NS", "BAJFINANCE.NS", "HAL.NS", "NVDA"
+]
 
-url = "https://tmpfiles.org/api/v1/upload"
-with open("test.pdf", 'rb') as f:
-    response = requests.post(url, files={'file': f})
-    
-print("Status Code:", response.status_code)
-print("Text:", response.text)
-try:
-    data = response.json()
-    url = data['data']['url']
-    print("URL:", url)
-    # The API returns https://tmpfiles.org/1234/test.pdf
-    # The direct link is https://tmpfiles.org/dl/1234/test.pdf
-    direct_url = url.replace("tmpfiles.org/", "tmpfiles.org/dl/")
-    print("Direct URL:", direct_url)
-except Exception as e:
-    print("JSON Parse Error:", e)
+for s in symbols:
+    info = yf.Ticker(s).info
+    if 'shortName' in info:
+        print(f"{s}: {info['shortName']}")
+    else:
+        print(f"{s}: NOT FOUND")

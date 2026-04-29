@@ -60,7 +60,7 @@ def analyze_with_gemini(all_data):
     
     prompt = f"""
     You are an expert financial analyst AI agent.
-    Analyze the following stocks using the latest available information from the past 24 hours.
+    Provide a DEEP narrative analysis for each of the following stocks using the latest available information from the past 24 hours.
     
     Current Date and Time: {date_today}
     
@@ -68,19 +68,18 @@ def analyze_with_gemini(all_data):
     {all_data}
     
     INSTRUCTIONS:
-    1. DATA COLLECTION: Consider the provided news and general macroeconomic factors (Fed rates, inflation, GDP).
-    2. ANALYSIS: For each stock summarize key events, perform sentiment analysis (Positive/Negative/Neutral), identify short/long-term drivers, and evaluate risk factors.
-    3. MARKET IMPACT: Predict likely short-term stock movement (Bullish/Bearish/Neutral) and explain WHY. Discuss long-term outlook.
-    4. OUTPUT FORMAT:
-       For each stock:
-       - Company Name
-       - Key Updates (last 24 hrs)
-       - Sentiment Analysis
-       - Expected Short-Term Impact
-       - Long-Term Outlook
-       - Risk Factors
-    5. FINAL SUMMARY: Overall market sentiment, key macroeconomic drivers, and portfolio-level conclusion.
-    6. STYLE: Professional financial report tone, precise, data-driven. Use markdown formatting.
+    1. DEEP ANALYSIS: DO NOT generate tables. Provide a detailed narrative for EACH stock. Discuss any news, earnings results, contracts, or events from the past 24 hours.
+    2. EVALUATION: Discuss the short-term impact of these events and the long-term outlook. Identify any critical risk factors.
+    3. FORMATTING: Use Markdown. 
+       Format EACH stock EXACTLY like this:
+       ## Company Name (Ticker)
+       - **24-Hour Update:** (Detailed explanation of news/results)
+       - **Short-Term Impact:** (Analysis of price action and sentiment)
+       - **Long-Term Outlook:** (Fundamental view)
+       - **Key Risks:** (What to watch out for)
+       
+    4. NO TABLES: Under no circumstances should you generate a markdown table.
+    5. FINAL SUMMARY: End with a "## Market Overview" section summarizing the broader market sentiment and key macroeconomic drivers.
     """
     
     max_retries = 5
@@ -179,8 +178,8 @@ def create_pdf(markdown_text, filename="Financial_Report.pdf"):
         # Encode safely
         raw = raw.encode('latin-1', 'replace').decode('latin-1')
 
-        # H1/H2 section headers: ## Title or # Title
-        if raw.startswith('## ') or raw.startswith('# '):
+        # H1/H2/H3/H4 section headers: start with #
+        if raw.startswith('#'):
             title = raw.lstrip('#').strip()
             pdf.section_header(title)
 
