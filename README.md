@@ -1,6 +1,6 @@
 # Finance AI Agent
 
-Production-ready Python service that runs every day at 12:00 AM IST, collects the last 24 hours of company and macroeconomic signals, uses the OpenAI API to generate equity-style analysis, renders a PDF report, and delivers it by email and WhatsApp.
+Production-ready Python service that runs every day at 12:00 AM IST, collects the last 24 hours of company and macroeconomic signals, uses the Gemini API to generate equity-style analysis, renders a PDF report, and delivers it by email and WhatsApp.
 
 ## Features
 
