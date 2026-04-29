@@ -2,7 +2,7 @@ import os
 import datetime
 import yfinance as yf
 from fpdf import FPDF
-import google.generativeai as genai
+from google import genai
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -30,7 +30,7 @@ WHATSAPP_RECEIVER = os.getenv("WHATSAPP_RECEIVER")
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable is not set.")
 
-genai.configure(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY)
 
 def fetch_stock_data(ticker):
     print(f"Fetching data for {ticker}...")
@@ -55,7 +55,6 @@ def fetch_stock_data(ticker):
 
 def analyze_with_gemini(all_data):
     print("Analyzing data with Gemini...")
-    model = genai.GenerativeModel('gemini-1.5-pro')
     
     date_today = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
     
@@ -84,7 +83,10 @@ def analyze_with_gemini(all_data):
     6. STYLE: Professional financial report tone, precise, data-driven. Use markdown formatting.
     """
     
-    response = model.generate_content(prompt)
+    response = client.models.generate_content(
+        model='gemini-2.5-flash',
+        contents=prompt
+    )
     return response.text
 
 class PDFReport(FPDF):
