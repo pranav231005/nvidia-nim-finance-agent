@@ -83,20 +83,22 @@ def analyze_with_gemini(all_data):
     6. STYLE: Professional financial report tone, precise, data-driven. Use markdown formatting.
     """
     
-    try:
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
-    except Exception as e:
-        print(f"High demand for 2.5-flash, waiting 15s before retry: {e}")
-        import time
-        time.sleep(15)
-        response = client.models.generate_content(
-            model='gemini-2.5-flash',
-            contents=prompt
-        )
-    return response.text
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=prompt
+            )
+            return response.text
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"API busy (attempt {attempt + 1}/{max_retries}). Waiting 30 seconds... Error: {e}")
+                import time
+                time.sleep(30)
+            else:
+                print("Failed after maximum retries.")
+                raise e
 
 class PDFReport(FPDF):
     def header(self):
