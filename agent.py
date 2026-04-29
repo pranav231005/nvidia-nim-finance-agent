@@ -83,10 +83,17 @@ def analyze_with_gemini(all_data):
     6. STYLE: Professional financial report tone, precise, data-driven. Use markdown formatting.
     """
     
-    response = client.models.generate_content(
-        model='gemini-2.5-flash',
-        contents=prompt
-    )
+    try:
+        response = client.models.generate_content(
+            model='gemini-2.5-flash',
+            contents=prompt
+        )
+    except Exception as e:
+        print(f"High demand for 2.5-flash, falling back to 1.5-flash: {e}")
+        response = client.models.generate_content(
+            model='gemini-1.5-flash',
+            contents=prompt
+        )
     return response.text
 
 class PDFReport(FPDF):
