@@ -11,7 +11,10 @@ import requests
 from twilio.rest import Client
 
 # Configuration
-TICKERS = os.getenv("TICKERS", "RELIANCE.NS,TCS.NS,HDFCBANK.NS").split(",")
+tickers_env = os.getenv("TICKERS", "").strip()
+if not tickers_env:
+    tickers_env = "RELIANCE.NS,TCS.NS,HDFCBANK.NS"
+TICKERS = tickers_env.split(",")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 # Email configuration (Optional, for sending the PDF)
