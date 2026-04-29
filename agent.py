@@ -85,13 +85,15 @@ def analyze_with_gemini(all_data):
     
     try:
         response = client.models.generate_content(
-            model='gemini-2.0-flash',
+            model='gemini-2.5-flash',
             contents=prompt
         )
     except Exception as e:
-        print(f"High demand for 2.0-flash, falling back to gemini-2.0-flash-lite: {e}")
+        print(f"High demand for 2.5-flash, waiting 15s before retry: {e}")
+        import time
+        time.sleep(15)
         response = client.models.generate_content(
-            model='gemini-2.0-flash-lite',
+            model='gemini-2.5-flash',
             contents=prompt
         )
     return response.text
