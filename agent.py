@@ -181,12 +181,12 @@ def send_whatsapp(filename):
         
     print("Uploading PDF to secure temporary storage for WhatsApp...")
     try:
-        url = f"https://transfer.sh/{filename}"
+        url = "https://file.io"
         with open(filename, 'rb') as f:
-            response = requests.put(url, data=f)
+            response = requests.post(url, files={'file': f})
             
         if response.status_code == 200:
-            media_url = response.text.strip()
+            media_url = response.json().get('link')
             print(f"PDF successfully uploaded to: {media_url}")
             
             print("Sending WhatsApp message via Twilio...")
@@ -199,7 +199,7 @@ def send_whatsapp(filename):
             )
             print(f"WhatsApp message sent successfully! SID: {message.sid}")
         else:
-            print("Failed to upload PDF for WhatsApp.")
+            print(f"Failed to upload PDF for WhatsApp. Status Code: {response.status_code}")
     except Exception as e:
         print(f"Failed to send WhatsApp message: {e}")
 def main():
