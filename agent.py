@@ -87,7 +87,7 @@ def analyze_with_gemini(all_data):
     for attempt in range(max_retries):
         try:
             response = client.models.generate_content(
-                model='gemini-3.1-flash-lite',
+                model='gemini-2.5-flash',
                 contents=prompt
             )
             return response.text
