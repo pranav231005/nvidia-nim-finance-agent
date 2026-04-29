@@ -119,16 +119,16 @@ def create_pdf(markdown_text, filename="Financial_Report.pdf"):
     pdf.add_page()
     pdf.set_font("helvetica", size=11)
     
+    import textwrap
+    
     # Very basic markdown to text conversion for FPDF (which doesn't natively support markdown)
     # In a production app, you might want to use a more robust markdown-to-pdf library like xhtml2pdf or weasyprint
     for line in markdown_text.split('\n'):
         # Handle basic markdown bolding
         clean_line = line.replace('**', '').replace('##', '').replace('*', '')
         
-        # Break extremely long words (like long URLs or dashed lines) to prevent FPDF crash
-        words = clean_line.split(' ')
-        broken_words = [w[:70] + ' ' + w[70:] if len(w) > 70 else w for w in words]
-        clean_line = ' '.join(broken_words)
+        # Use Python's textwrap to safely break extremely long lines/URLs that crash FPDF
+        clean_line = textwrap.fill(clean_line, width=90, break_long_words=True)
 
         # Handle encoding issues
         clean_line = clean_line.encode('latin-1', 'replace').decode('latin-1')
