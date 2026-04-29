@@ -102,28 +102,34 @@ def analyze_with_gemini(all_data):
 
 class PDFReport(FPDF):
     def header(self):
-        self.set_font('Arial', 'B', 15)
-        self.cell(0, 10, 'Daily Financial Analysis Report', 0, 1, 'C')
-        self.set_font('Arial', 'I', 10)
-        self.cell(0, 10, f'Generated on: {datetime.datetime.now().strftime("%Y-%m-%d")}', 0, 1, 'C')
+        self.set_font('helvetica', 'B', 15)
+        self.cell(0, 10, 'Daily Financial Analysis Report', new_x="LMARGIN", new_y="NEXT", align='C')
+        self.set_font('helvetica', 'I', 10)
+        self.cell(0, 10, f'Generated on: {datetime.datetime.now().strftime("%Y-%m-%d")}', new_x="LMARGIN", new_y="NEXT", align='C')
         self.ln(10)
 
     def footer(self):
         self.set_y(-15)
-        self.set_font('Arial', 'I', 8)
-        self.cell(0, 10, f'Page {self.page_no()}', 0, 0, 'C')
+        self.set_font('helvetica', 'I', 8)
+        self.cell(0, 10, f'Page {self.page_no()}', align='C')
 
 def create_pdf(markdown_text, filename="Financial_Report.pdf"):
     print("Generating PDF...")
     pdf = PDFReport()
     pdf.add_page()
-    pdf.set_font("Arial", size=11)
+    pdf.set_font("helvetica", size=11)
     
     # Very basic markdown to text conversion for FPDF (which doesn't natively support markdown)
     # In a production app, you might want to use a more robust markdown-to-pdf library like xhtml2pdf or weasyprint
     for line in markdown_text.split('\n'):
         # Handle basic markdown bolding
         clean_line = line.replace('**', '').replace('##', '').replace('*', '')
+        
+        # Break extremely long words (like long URLs or dashed lines) to prevent FPDF crash
+        words = clean_line.split(' ')
+        broken_words = [w[:70] + ' ' + w[70:] if len(w) > 70 else w for w in words]
+        clean_line = ' '.join(broken_words)
+
         # Handle encoding issues
         clean_line = clean_line.encode('latin-1', 'replace').decode('latin-1')
         pdf.multi_cell(0, 8, clean_line)
