@@ -128,7 +128,8 @@ def create_pdf(markdown_text, filename="Financial_Report.pdf"):
         clean_line = line.replace('**', '').replace('##', '').replace('*', '')
         
         # Use Python's textwrap to safely break extremely long lines/URLs that crash FPDF
-        clean_line = textwrap.fill(clean_line, width=90, break_long_words=True)
+        # Decreased width to 60 to ensure it fits on the physical A4 page width with standard margins
+        clean_line = textwrap.fill(clean_line, width=60, break_long_words=True)
 
         # Handle encoding issues
         clean_line = clean_line.encode('latin-1', 'replace').decode('latin-1')
