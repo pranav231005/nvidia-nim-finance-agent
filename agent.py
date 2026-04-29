@@ -101,84 +101,66 @@ def analyze_with_gemini(all_data):
                 raise e
 
 class PDFReport(FPDF):
-    # Dark navy color for header bar
-    HEADER_R, HEADER_G, HEADER_B = 15, 23, 42
-    # Accent orange for section icons
-    ACCENT_R, ACCENT_G, ACCENT_B = 234, 88, 12
-    # Section title dark
-    TITLE_R, TITLE_G, TITLE_B = 15, 23, 42
-    # Body text color
-    BODY_R, BODY_G, BODY_B = 30, 30, 30
+    # Minimalist color palette
+    TEXT_COLOR = (30, 30, 30)
+    LIGHT_TEXT = (120, 120, 120)
 
     def header(self):
-        # Full-width dark navy header bar
-        self.set_fill_color(self.HEADER_R, self.HEADER_G, self.HEADER_B)
-        self.rect(0, 0, 210, 30, 'F')
-        # Report title in white
-        self.set_y(8)
-        self.set_font('helvetica', 'B', 16)
-        self.set_text_color(255, 255, 255)
-        self.cell(0, 8, 'Daily Financial Analysis Report', align='C', new_x="LMARGIN", new_y="NEXT")
+        # Clean white header, left aligned
+        self.set_y(15)
+        self.set_font('helvetica', 'B', 18)
+        self.set_text_color(*self.TEXT_COLOR)
+        self.cell(0, 8, 'Daily Financial Analysis Report', new_x="LMARGIN", new_y="NEXT", align='L')
+        
         # Subtitle date in light gray
-        self.set_font('helvetica', '', 9)
-        self.set_text_color(180, 200, 220)
-        self.cell(0, 6, f'Generated on {datetime.datetime.now().strftime("%A, %B %d, %Y")}   |   Indian Market Intelligence', align='C', new_x="LMARGIN", new_y="NEXT")
-        # Reset text color and add spacing
-        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
-        self.ln(8)
+        self.set_font('helvetica', '', 10)
+        self.set_text_color(*self.LIGHT_TEXT)
+        self.cell(0, 6, f'Generated on {datetime.datetime.now().strftime("%A, %B %d, %Y")}', new_x="LMARGIN", new_y="NEXT", align='L')
+        self.ln(6)
 
     def footer(self):
-        # Thin accent line above footer
-        self.set_y(-18)
-        self.set_draw_color(self.ACCENT_R, self.ACCENT_G, self.ACCENT_B)
-        self.set_line_width(0.5)
-        self.line(10, self.get_y(), 200, self.get_y())
-        self.ln(1)
-        self.set_font('helvetica', 'I', 8)
-        self.set_text_color(120, 120, 120)
-        self.cell(0, 8, f'Page {self.page_no()}  |  AI-Powered Financial Intelligence  |  Confidential', align='C')
+        self.set_y(-15)
+        self.set_font('helvetica', '', 9)
+        self.set_text_color(*self.LIGHT_TEXT)
+        self.cell(0, 10, str(self.page_no()), align='C')
 
     def section_header(self, title):
-        """Print a styled section header with an orange left accent bar."""
-        self.ln(4)
-        # Orange accent bar on left
-        self.set_fill_color(self.ACCENT_R, self.ACCENT_G, self.ACCENT_B)
-        self.rect(self.l_margin - 1, self.get_y(), 3, 8, 'F')
-        # Section title text
-        self.set_font('helvetica', 'B', 13)
-        self.set_text_color(self.TITLE_R, self.TITLE_G, self.TITLE_B)
-        self.set_x(self.l_margin + 5)
-        self.cell(0, 8, title, new_x="LMARGIN", new_y="NEXT")
-        # Thin underline
-        self.set_draw_color(220, 220, 230)
-        self.set_line_width(0.3)
-        self.line(self.l_margin, self.get_y(), 200, self.get_y())
-        self.ln(3)
-        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
+        """Print a styled section header (H1/H2)."""
+        self.ln(6)
+        self.set_font('helvetica', 'B', 14)
+        self.set_text_color(*self.TEXT_COLOR)
+        self.cell(0, 8, title, new_x="LMARGIN", new_y="NEXT", align='L')
+        self.ln(2)
 
     def bullet_line(self, text):
-        """Print a bullet point with proper indentation."""
+        """Print a standard bullet point."""
         import textwrap
         self.set_font('helvetica', '', 10)
-        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
-        # Orange bullet dot
-        self.set_fill_color(self.ACCENT_R, self.ACCENT_G, self.ACCENT_B)
-        self.circle(self.l_margin + 1, self.get_y() + 3.5, 1, 'F')
-        # Indented text
+        self.set_text_color(*self.TEXT_COLOR)
+        
+        # Bullet character
+        bullet = chr(149)
+        
         wrapped = textwrap.wrap(text, width=90, break_long_words=True)
         for i, w_line in enumerate(wrapped):
             self.set_x(self.l_margin + 5)
-            self.cell(0, 5.5, w_line, new_x="LMARGIN", new_y="NEXT")
-        self.ln(1)
+            if i == 0:
+                self.cell(5, 5.5, bullet, align='L')
+                self.cell(0, 5.5, w_line, new_x="LMARGIN", new_y="NEXT")
+            else:
+                self.set_x(self.l_margin + 10)
+                self.cell(0, 5.5, w_line, new_x="LMARGIN", new_y="NEXT")
+        self.ln(1.5)
 
     def body_line(self, text):
-        """Print a regular body line with proper wrapping."""
+        """Print a regular body line."""
         import textwrap
         self.set_font('helvetica', '', 10)
-        self.set_text_color(self.BODY_R, self.BODY_G, self.BODY_B)
+        self.set_text_color(*self.TEXT_COLOR)
         wrapped = textwrap.wrap(text, width=95, break_long_words=True)
         for w_line in wrapped:
             self.cell(0, 5.5, w_line, new_x="LMARGIN", new_y="NEXT")
+        self.ln(1.5)
 
 
 def create_pdf(markdown_text, filename="Financial_Report.pdf"):
