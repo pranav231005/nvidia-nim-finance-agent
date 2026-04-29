@@ -52,7 +52,7 @@ def fetch_stock_data(ticker):
 
 def analyze_with_gemini(all_data):
     print("Analyzing data with Gemini...")
-    model = genai.GenerativeModel('gemini-1.5-pro-latest')
+    model = genai.GenerativeModel('gemini-1.5-pro')
     
     date_today = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
     
