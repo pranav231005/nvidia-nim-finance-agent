@@ -24,7 +24,6 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_SENDER = os.getenv("TWILIO_WHATSAPP_SENDER")
 WHATSAPP_RECEIVER = os.getenv("WHATSAPP_RECEIVER")
-
 if not GEMINI_API_KEY:
     raise ValueError("GEMINI_API_KEY environment variable is not set.")
 
@@ -174,7 +173,6 @@ def send_whatsapp(filename):
             print("Failed to upload PDF for WhatsApp.")
     except Exception as e:
         print(f"Failed to send WhatsApp message: {e}")
-
 def main():
     all_stock_data = ""
     for ticker in TICKERS:
