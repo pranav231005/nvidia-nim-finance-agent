@@ -122,18 +122,24 @@ def create_pdf(markdown_text, filename="Financial_Report.pdf"):
     import textwrap
     
     # Very basic markdown to text conversion for FPDF (which doesn't natively support markdown)
-    # In a production app, you might want to use a more robust markdown-to-pdf library like xhtml2pdf or weasyprint
     for line in markdown_text.split('\n'):
-        # Handle basic markdown bolding
-        clean_line = line.replace('**', '').replace('##', '').replace('*', '')
+        # Clean up markdown formatting and trailing spaces/carriage returns
+        clean_line = line.replace('**', '').replace('##', '').replace('*', '').strip()
         
-        # Use Python's textwrap to safely break extremely long lines/URLs that crash FPDF
-        # Decreased width to 60 to ensure it fits on the physical A4 page width with standard margins
-        clean_line = textwrap.fill(clean_line, width=60, break_long_words=True)
-
-        # Handle encoding issues
+        # Handle encoding issues by converting unknown characters to '?'
         clean_line = clean_line.encode('latin-1', 'replace').decode('latin-1')
-        pdf.multi_cell(0, 8, clean_line)
+        
+        # Use Python's textwrap to split the text into an array of safe, short lines
+        wrapped_lines = textwrap.wrap(clean_line, width=85, break_long_words=True)
+        
+        # If the line was empty (e.g. paragraph break), just add an empty space
+        if not wrapped_lines:
+            pdf.ln(8)
+            continue
+            
+        # Print each wrapped line manually using standard cell() to bypass the buggy multi_cell() function
+        for w_line in wrapped_lines:
+            pdf.cell(0, 8, w_line, new_x="LMARGIN", new_y="NEXT")
         
     pdf.output(filename)
     print(f"PDF saved as {filename}")
