@@ -1,15 +1,21 @@
-import textwrap
+import requests
 
-line = "------------------------------------------------------------------------------------------------------------------------------------------------------------"
-clean_line = textwrap.fill(line, width=90, break_long_words=True)
-print(repr(clean_line))
+with open("test.pdf", "wb") as f:
+    f.write(b"%PDF-1.4 dummy")
 
-from fpdf import FPDF
-pdf = FPDF()
-pdf.add_page()
-pdf.set_font("helvetica", size=11)
+url = "https://tmpfiles.org/api/v1/upload"
+with open("test.pdf", 'rb') as f:
+    response = requests.post(url, files={'file': f})
+    
+print("Status Code:", response.status_code)
+print("Text:", response.text)
 try:
-    pdf.multi_cell(0, 8, clean_line)
-    print("PDF SUCCESS")
+    data = response.json()
+    url = data['data']['url']
+    print("URL:", url)
+    # The API returns https://tmpfiles.org/1234/test.pdf
+    # The direct link is https://tmpfiles.org/dl/1234/test.pdf
+    direct_url = url.replace("tmpfiles.org/", "tmpfiles.org/dl/")
+    print("Direct URL:", direct_url)
 except Exception as e:
-    print(f"PDF FAILED: {e}")
+    print("JSON Parse Error:", e)

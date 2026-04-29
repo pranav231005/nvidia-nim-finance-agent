@@ -181,12 +181,19 @@ def send_whatsapp(filename):
         
     print("Uploading PDF to secure temporary storage for WhatsApp...")
     try:
-        url = "https://file.io"
+        url = "https://tmpfiles.org/api/v1/upload"
         with open(filename, 'rb') as f:
             response = requests.post(url, files={'file': f})
             
         if response.status_code == 200:
-            media_url = response.json().get('link')
+            data = response.json()
+            original_url = data['data']['url']
+            
+            # tmpfiles.org requires /dl/ inserted in the path for direct media downloads
+            media_url = original_url.replace("tmpfiles.org/", "tmpfiles.org/dl/")
+            # ensure it uses https for Twilio
+            media_url = media_url.replace("http://", "https://")
+            
             print(f"PDF successfully uploaded to: {media_url}")
             
             print("Sending WhatsApp message via Twilio...")
