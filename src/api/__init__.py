@@ -1,0 +1,1 @@
+"""FastAPI server, WebSocket, and agent communication API."""

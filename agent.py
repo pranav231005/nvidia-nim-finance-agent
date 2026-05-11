@@ -3,6 +3,7 @@ import datetime
 import yfinance as yf
 from fpdf import FPDF
 from google import genai
+from openai import OpenAI
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -16,6 +17,10 @@ if not tickers_env:
     tickers_env = "RELIANCE.NS,TCS.NS,HDFCBANK.NS"
 TICKERS = tickers_env.split(",")
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+NIM_API_KEY = os.getenv("NIM_API_KEY")
+NIM_BASE_URL = os.getenv("NIM_BASE_URL", "https://integrate.api.nvidia.com/v1")
+NIM_MODEL = os.getenv("NIM_MODEL", "deepseek-ai/deepseek-v4-pro")
+LLM_PROVIDER = os.getenv("LLM_PROVIDER", "gemini")  # "gemini" or "nim"
 
 # Email configuration (Optional, for sending the PDF)
 EMAIL_SENDER = os.getenv("EMAIL_SENDER")
@@ -27,10 +32,13 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_SENDER = os.getenv("TWILIO_WHATSAPP_SENDER")
 WHATSAPP_RECEIVER = os.getenv("WHATSAPP_RECEIVER")
-if not GEMINI_API_KEY:
+if not GEMINI_API_KEY and LLM_PROVIDER == "gemini":
     raise ValueError("GEMINI_API_KEY environment variable is not set.")
+if not NIM_API_KEY and LLM_PROVIDER == "nim":
+    raise ValueError("NIM_API_KEY environment variable is not set.")
 
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=GEMINI_API_KEY) if GEMINI_API_KEY else None
+nim_client = OpenAI(api_key=NIM_API_KEY, base_url=NIM_BASE_URL) if NIM_API_KEY else None
 
 def fetch_stock_data(ticker):
     print(f"Fetching data for {ticker}...")
@@ -53,11 +61,67 @@ def fetch_stock_data(ticker):
         
     return news_str
 
+def analyze_with_nim(all_data):
+    print("Analyzing data with NVIDIA NIM (DeepSeek V4 Pro)...")
+
+    date_today = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
+
+    prompt = f"""
+    You are an expert financial analyst AI agent.
+    Provide a DEEP narrative analysis for each of the following stocks using the latest available information from the past 24 hours.
+
+    Current Date and Time: {date_today}
+
+    Data:
+    {all_data}
+
+    INSTRUCTIONS:
+    1. DEEP ANALYSIS: DO NOT generate tables. Provide a detailed narrative for EACH stock. Discuss any news, earnings results, contracts, or events from the past 24 hours.
+    2. EVALUATION: Discuss the short-term impact of these events and the long-term outlook. Identify any critical risk factors.
+    3. FORMATTING: Use Markdown.
+       Format EACH stock EXACTLY like this:
+       ## Company Name (Ticker)
+       - **24-Hour Update:** (Detailed explanation of news/results)
+       - **Short-Term Impact:** (Analysis of price action and sentiment)
+       - **Long-Term Outlook:** (Fundamental view)
+       - **Key Risks:** (What to watch out for)
+
+    4. NO TABLES: Under no circumstances should you generate a markdown table.
+    5. FINAL SUMMARY: End with a "## Market Overview" section summarizing the broader market sentiment and key macroeconomic drivers.
+    """
+
+    max_retries = 5
+    for attempt in range(max_retries):
+        try:
+            response = nim_client.chat.completions.create(
+                model=NIM_MODEL,
+                messages=[{"role": "user", "content": prompt}],
+                temperature=0.7,
+                max_tokens=4096,
+            )
+            return response.choices[0].message.content
+        except Exception as e:
+            if attempt < max_retries - 1:
+                print(f"API busy (attempt {attempt + 1}/{max_retries}). Waiting 30 seconds... Error: {e}")
+                import time
+                time.sleep(30)
+            else:
+                print("Failed after maximum retries.")
+                raise e
+
+
+def generate_analysis(all_data):
+    if LLM_PROVIDER == "nim":
+        return analyze_with_nim(all_data)
+    else:
+        return analyze_with_gemini(all_data)
+
+
 def analyze_with_gemini(all_data):
     print("Analyzing data with Gemini...")
-    
+
     date_today = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S IST")
-    
+
     prompt = f"""
     You are an expert financial analyst AI agent.
     Provide a DEEP narrative analysis for each of the following stocks using the latest available information from the past 24 hours.
@@ -284,7 +348,7 @@ def main():
         news = fetch_stock_data(ticker.strip())
         all_stock_data += f"\n--- {ticker.strip()} ---\n{news}\n"
         
-    analysis_result = analyze_with_gemini(all_stock_data)
+    analysis_result = generate_analysis(all_stock_data)
     
     # Save raw markdown as artifact
     with open("report.md", "w", encoding="utf-8") as f:

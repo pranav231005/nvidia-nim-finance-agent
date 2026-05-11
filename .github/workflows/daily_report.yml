@@ -26,7 +26,11 @@ jobs:
 
     - name: Run Financial Agent
       env:
+        LLM_PROVIDER: ${{ secrets.LLM_PROVIDER }}
         GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        NIM_API_KEY: ${{ secrets.NIM_API_KEY }}
+        NIM_BASE_URL: ${{ secrets.NIM_BASE_URL }}
+        NIM_MODEL: ${{ secrets.NIM_MODEL }}
         TICKERS: ${{ secrets.TICKERS }}
         EMAIL_SENDER: ${{ secrets.EMAIL_SENDER }}
         EMAIL_PASSWORD: ${{ secrets.EMAIL_PASSWORD }}
